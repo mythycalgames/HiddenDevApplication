@@ -1,0 +1,75 @@
+local Players = game:GetService('Players')
+local DataStoreService = game:GetService('DataStoreService')
+local DataStore = DataStoreService:GetDataStore('PlayerData')
+
+Players.PlayerAdded:Connect(function(player)
+	local leaderstats = Instance.new('Folder')
+	leaderstats.Parent = player
+	leaderstats.Name = 'leaderstats'
+	
+	local currency = Instance.new('IntValue')
+	currency.Parent = leaderstats
+	currency.Name = 'Currency'
+	
+	
+	
+	local success, data = pcall(function()
+		return DataStore:GetAsync(player.UserId)
+	end)
+	
+	if success and data then
+		currency.Value = data.Currency or 0
+		player:SetAttribute('Steps', data.Steps or 0)
+		player:SetAttribute('StepsMultiplier', data.StepsMultiplier or 1)
+		player:SetAttribute('XP', data.XP or 0)
+		player:SetAttribute('Level', data.Level or 1)
+		print('[Leaderstats] Loaded currency', currency.Value, 'for', player.Name)
+		print('[Leaderstats] Loaded XP', player:GetAttribute('XP'), 'for', player.Name)
+		print('[Leaderstats] Loaded Level', player:GetAttribute('Level'), 'for', player.Name)
+		print('[Leaderstats] Loaded Steps', player:GetAttribute('Steps'), 'for', player.Name)
+		print('[Leaderstats] Loaded StepsMultiplier', player:GetAttribute('StepsMultiplier'), 'for', player.Name)
+	else
+		currency.Value = 0
+		player:SetAttribute('Steps', 0)
+		player:SetAttribute('StepsMultiplier', 1)
+		player:SetAttribute('XP', 0)
+		player:SetAttribute('Level', 1)
+		print("[Leaderstats] New player", player.Name, ', Currency = 0')
+		print("[Leaderstats] New player", player.Name, ', XP = 0')
+		print("[Leaderstats] New player", player.Name, ', Level = 1')
+		print("[Leaderstats] New player", player.Name, ', Steps = 0')
+		print("[Leaderstats] New player", player.Name, ', StepsMulti = 1')
+	end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	local currentCurrency = player.leaderstats.Currency.Value
+	local currentXP = player:GetAttribute('XP') or 0
+	local currentLevel = player:GetAttribute('Level') or 1
+	local currentSteps = player:GetAttribute('Steps') or 0
+	local currentStepsMultiplier = player:GetAttribute('StepsMultiplier') or 1
+	
+	local success, errormsg = pcall(function()
+		DataStore:SetAsync(player.UserId, {
+			Currency = currentCurrency,
+			XP = currentXP,
+			Level = currentLevel,
+			Steps = currentSteps,
+			StepsMultiplier = currentStepsMultiplier
+		})
+	end)
+	
+	if success then
+		print('[Leaderstats] Saved Currency', player.leaderstats.Currency.Value, 'for', player.Name)
+		print('[Leaderstats] Saved XP', player:GetAttribute('XP'), 'for', player.Name)
+		print('[Leaderstats] Saved Level', player:GetAttribute('Level'), 'for', player.Name)
+		print('[Leaderstats] Saved Steps', player:GetAttribute('Steps'), 'for', player.Name)
+		print('[Leaderstats] Saved StepsMulti', player:GetAttribute('StepsMultiplier'), 'for', player.Name)
+	else
+		warn('[Leaderstats] Failed to save data for', player.Name, ":", errormsg)
+	end
+end)
+
+game:BindToClose(function()
+	task.wait(2)
+end)
